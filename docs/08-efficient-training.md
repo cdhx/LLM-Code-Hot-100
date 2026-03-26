@@ -8,11 +8,48 @@
 
 ## 目录
 
+- [方法一览对比](#方法一览对比)
 - [LoRA](#lora)
 - [Gradient Checkpointing](#gradient-checkpointing)
 - [Mixed Precision Training](#mixed-precision-training)
 - [Gradient Accumulation](#gradient-accumulation)
 - [面试追问汇总](#面试追问汇总)
+
+---
+
+## 方法一览对比
+
+> 💡 **一句话区分**：高效训练技术解决的是**显存不够**或**计算太慢**的问题
+
+| 方法 | 解决问题 | 核心思想 | 代价 |
+|:---|:---|:---|:---|
+| **LoRA** | 参数太多 | 只训练低秩增量 | 效果略差 |
+| **Gradient Checkpointing** | 激活值占显存 | 不存中间层，重算 | 计算多 30% |
+| **Mixed Precision** | 模型+梯度占显存 | FP16 计算，FP32 主副本 | 需 loss scaling |
+| **Gradient Accumulation** | batch 太小 | 累积多次梯度再更新 | 训练变慢 |
+
+```python
+# 显存占用分析（了解这个才能选对方法！）
+# 假设 7B 模型，FP32，batch_size=1，seq_len=2048
+
+# 1. 模型参数: 7B * 4 bytes = 28 GB
+# 2. 梯度: 7B * 4 bytes = 28 GB
+# 3. 优化器状态 (Adam): 7B * 2 * 4 bytes = 56 GB (m + v)
+# 4. 激活值: 取决于 batch/seq，通常 10-50 GB
+
+# 解决方案：
+# - 参数太多 → LoRA（只训 0.1% 参数）
+# - 激活值太大 → Gradient Checkpointing（不存，重算）
+# - 模型+梯度大 → Mixed Precision（FP16，减半）
+# - batch 太小 → Gradient Accumulation（累积多次）
+```
+
+> 🤔 **Q: 我显存不够，应该用哪个技术？**
+>
+> 1. 先试 Mixed Precision：最简单，一行代码减半显存
+> 2. 再试 Gradient Checkpointing：再省 30-50%，但变慢
+> 3. batch 小时用 Accumulation：等效大 batch
+> 4. 参数量大时用 LoRA：只训练 0.1% 参数
 
 ---
 
@@ -27,6 +64,14 @@ $$W' = W + \Delta W = W + BA$$
 其中 $B \in \mathbb{R}^{d \times r}$, $A \in \mathbb{R}^{r \times k}$，$r \ll \min(d, k)$
 
 **参数量**：原始 $d \times k$ → LoRA $(d + k) \times r$
+
+> 🤔 **Q: 为什么 B 初始化为 0，A 用 Kaiming？**
+>
+> 关键洞察：初始时 BA = 0，模型输出 = W + BA = W！
+>
+> 这样微调从**原模型出发**，而不是随机点。
+>
+> A 用 Kaiming 是保证梯度能流动（如果 A 也是 0，梯度为 0）。
 
 ### 📝 实现代码
 

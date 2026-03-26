@@ -8,11 +8,46 @@
 
 ## 目录
 
+- [方法一览对比](#方法一览对比)
 - [KV Cache](#kv-cache)
 - [PagedAttention](#pagedattention)
 - [Speculative Decoding](#speculative-decoding)
 - [Continuous Batching](#continuous-batching)
 - [面试追问汇总](#面试追问汇总)
+
+---
+
+## 方法一览对比
+
+> 💡 **一句话区分**：推理优化的核心目标是**提高吞吐量**和**降低延迟**
+
+| 方法 | 解决问题 | 核心思想 | 效果 |
+|:---|:---|:---|:---|
+| **KV Cache** | 重复计算 | 缓存历史 K/V | 计算减少 n 倍 |
+| **PagedAttention** | 显存碎片 | 分页管理显存 | 显存利用率提升 |
+| **Speculative Decoding** | 生成太慢 | 小模型推测+大模型验证 | 加速 2-3x |
+| **Continuous Batching** | batch 利用率低 | 动态插入新请求 | 吞吐量提升 2-5x |
+
+```python
+# 推理的两个阶段，优化点不同！
+
+# 1. Prefill（首次，compute-bound）
+# - 处理整个 prompt，生成第一个 token
+# - 矩阵乘法多，GPU 利用率高
+# - 优化: 并行、量化
+
+# 2. Decode（递增，memory-bound）
+# - 每次只生成 1 个 token，但要读取整个 KV Cache
+# - 维度小，内存带宽是瓶颈
+# - 优化: KV Cache、batching、speculative
+```
+
+> 🤔 **Q: 为什么 Decode 阶段是 memory-bound？**
+>
+> Decode 时，每次只生成 1 个 token（维度 [1, hidden]），
+> 但要读取整个 KV Cache（维度 [seq_len, hidden]）。
+>
+> 计算量很小，但内存读写很大，所以是内存带宽瓶颈。
 
 ---
 
@@ -24,6 +59,16 @@
 
 **没有 KV Cache**：生成第 n 个 token 需要计算 n 次 K, V
 **有 KV Cache**：只计算新 token 的 K, V，复用历史缓存
+
+> 🤔 **Q: KV Cache 占多少显存？怎么估算？**
+>
+> 公式：`2 × num_layers × batch × seq_len × num_kv_heads × head_dim × dtype_bytes`
+>
+> 例如 LLaMA-2 7B（FP16）：
+> - 32 layers, 32 heads, head_dim=128, seq=4096, batch=1
+> - = 2 × 32 × 1 × 4096 × 32 × 128 × 2 bytes = **2 GB**
+>
+> 用 GQA 的话（num_kv_heads=8），只需 **0.5 GB**！
 
 ### 📝 实现代码
 

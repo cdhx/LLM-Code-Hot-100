@@ -1,0 +1,37 @@
+name: Update Top 20 Ranking
+
+on:
+  schedule:
+    # 每天 UTC 16:00 (北京时间 00:00) 运行
+    - cron: '0 16 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  update-ranking:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install @supabase/supabase-js
+      
+      - name: Update README ranking
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scripts/update-ranking.js
+      
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git diff --staged --quiet || git commit -m "📊 Auto-update Top 20 ranking [skip ci]"
+          git push

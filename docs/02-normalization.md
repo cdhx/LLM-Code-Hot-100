@@ -8,11 +8,44 @@
 
 ## 目录
 
+- [方法一览对比](#方法一览对比)
 - [Layer Normalization](#layer-normalization)
 - [RMS Normalization](#rms-normalization)
 - [Batch Normalization](#batch-normalization)
 - [Pre-Norm vs Post-Norm](#pre-norm-vs-post-norm)
 - [面试追问汇总](#面试追问汇总)
+
+---
+
+## 方法一览对比
+
+> 💡 **一句话区分**：归一化的核心区别在于**在哪个维度计算统计量**
+
+| 方法 | 统计维度 | 公式差异 | 使用场景 |
+|:---|:---|:---|:---|
+| **LayerNorm** | 每个样本的特征维度 | `(x - mean) / std * γ + β` | Transformer |
+| **RMSNorm** | 每个样本的特征维度 | `x / RMS(x) * γ`（无 mean） | LLaMA, Mistral |
+| **BatchNorm** | 整个 batch 的同一特征 | 同 LayerNorm，但维度不同 | CNN |
+
+```python
+# 三种 Norm 的核心区别，就这几行！
+# 输入 x: [batch, seq, hidden]
+
+# LayerNorm: 对每个 token 的 hidden 维度归一化
+mean = x.mean(dim=-1)          # [batch, seq]
+
+# RMSNorm: 同样对 hidden 维度，但只用 RMS，不用 mean
+rms = sqrt(mean(x**2, dim=-1)) # [batch, seq]
+
+# BatchNorm: 对每个特征在 batch 维度归一化
+mean = x.mean(dim=0)           # [seq, hidden]
+```
+
+> 🤔 **Q: 为什么 LLM 不用 BatchNorm？**
+>
+> 1. 序列长度变化：不同样本长度不同，BatchNorm 难以处理
+> 2. 小 batch 不稳定：LLM 训练通常用小 batch，统计量方差大
+> 3. 推理时不一致：训练用 batch 统计量，推理用 running stats，有差异
 
 ---
 
@@ -130,6 +163,12 @@ if __name__ == "__main__":
 | 计算方差 | O(d) | O(1) |
 | 归一化 | O(d) | O(d) |
 | **总计** | **O(d)** | **O(d)** |
+
+> 🤔 **Q: 为什么 LayerNorm 用 `unbiased=False`？**
+>
+> PyTorch 的 `var()` 默认用无偏估计（除以 n-1），但 LayerNorm 的原论文用的是有偏估计（除以 n）。
+>
+> 要与 PyTorch 官方 `nn.LayerNorm` 结果一致，必须用 `unbiased=False`！
 
 ---
 
@@ -274,6 +313,12 @@ if __name__ == "__main__":
 
 对**每个特征在 batch 维度**进行归一化。主要用于 CNN，在 Transformer 中较少使用。
 
+> 🤔 **Q: 为什么 BatchNorm 训练和推理表现不一致？**
+>
+> 训练时用当前 batch 的 mean/var，推理时用积累的 running_mean/running_var。
+>
+> 如果训练数据和推理数据分布不同，会有偏差。这也是 LLM 不用 BatchNorm 的原因之一。
+
 ### 📝 实现代码
 
 ```python
@@ -315,15 +360,18 @@ class BatchNorm1d(nn.Module):
         Args:
             x: [batch, num_features] 或 [batch, num_features, length]
         """
+        # 对于 3D 输入，先 flatten 为 2D 计算统计量
+        original_shape = x.shape
         if x.dim() == 3:
-            # [batch, features, length] -> [batch, length, features]
-            x = x.transpose(1, 2)
-            transpose_back = True
+            # [batch, features, length] -> [batch * length, features]
+            x = x.permute(0, 2, 1).reshape(-1, self.num_features)
+            reshape_back = True
         else:
-            transpose_back = False
+            reshape_back = False
         
         if self.training:
             # 训练时：使用当前 batch 的统计量
+            # x: [N, features]，对 dim=0 取均值得 [features]
             mean = x.mean(dim=0)
             var = x.var(dim=0, unbiased=False)
             
@@ -345,8 +393,10 @@ class BatchNorm1d(nn.Module):
         if self.affine:
             x_normalized = x_normalized * self.weight + self.bias
         
-        if transpose_back:
-            x_normalized = x_normalized.transpose(1, 2)
+        if reshape_back:
+            # [batch * length, features] -> [batch, features, length]
+            batch_size, _, length = original_shape
+            x_normalized = x_normalized.reshape(batch_size, length, -1).permute(0, 2, 1)
         
         return x_normalized
 ```
@@ -367,12 +417,14 @@ class BatchNorm1d(nn.Module):
 
 ### 🎯 核心区别
 
+> 💡 **记忆技巧**：Pre-Norm “先洗澡再进门”，Post-Norm “进门后再洗澡”
+
 ```
 Post-Norm (原始 Transformer):
-x = LayerNorm(x + Sublayer(x))
+x = LayerNorm(x + Sublayer(x))   # 注意: Norm 在最外层
 
 Pre-Norm (现代 LLM):
-x = x + Sublayer(LayerNorm(x))
+x = x + Sublayer(LayerNorm(x))   # 注意: Norm 在最里层，残差在外面
 ```
 
 ### 📝 实现对比
@@ -423,11 +475,22 @@ def analyze_gradient_flow():
     2. 不需要 warmup 或特殊学习率调度
     3. 可以训练更深的模型
     
-    Pre-Norm 劣势:
+    Pre-Norm 的劣势:
     1. 最终输出前需要额外的 LayerNorm
     2. 理论上表达能力略弱（但实践中可忽略）
     """)
-```
+
+> 🤔 **Q: 为什么 Pre-Norm 梯度更稳定？看这个图：**
+>
+> ```
+> Post-Norm: x ──▶ Sublayer ──▶ + ──▶ LayerNorm ──▶ output
+>            └─────────────┘
+>            梯度必须经过 LayerNorm，可能被压缩
+>
+> Pre-Norm:  x ──▶ LayerNorm ──▶ Sublayer ──▶ + ──▶ output
+>            └────────────────────┘
+>            梯度可以通过残差连接直接回传，永远不会消失！
+> ```
 
 ---
 

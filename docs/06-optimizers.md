@@ -8,12 +8,54 @@
 
 ## 目录
 
+- [方法一览对比](#方法一览对比)
 - [SGD](#sgd)
 - [SGD with Momentum](#sgd-with-momentum)
 - [Adam](#adam)
 - [AdamW](#adamw)
 - [Learning Rate Scheduler](#learning-rate-scheduler)
 - [面试追问汇总](#面试追问汇总)
+
+---
+
+## 方法一览对比
+
+> 💡 **一句话区分**：优化器的核心区别在于**如何修正梯度**
+
+| 方法 | 核心思想 | 更新公式 | 特点 |
+|:---|:---|:---|:---|
+| **SGD** | 原始梯度下降 | `θ -= lr * g` | 简单但慢 |
+| **Momentum** | 加速 + 减震 | `v = βv + g; θ -= lr * v` | 累积历史方向 |
+| **Adam** | 自适应学习率 | `θ -= lr * m/√v` | 每个参数不同步长 |
+| **AdamW** | Adam + 解耦权重衰减 | `θ *= (1-wd); θ -= lr * m/√v` | LLM 标配 |
+
+```python
+# 优化器的进化，每一步都在解决一个问题
+
+# SGD: 最基础
+θ -= lr * grad                         # 问题: 震荡、慢
+
+# Momentum: 累积历史梯度
+v = 0.9 * v + grad                       # 累积动量
+θ -= lr * v                             # 解决: 加速 + 减震
+
+# Adam: 每个参数自适应学习率
+m = 0.9 * m + 0.1 * grad                 # 一阶矩（方向）
+v = 0.999 * v + 0.001 * grad²            # 二阶矩（幅度）
+θ -= lr * m / √v                       # 解决: 不同参数不同步长
+
+# AdamW: 解耦 weight decay
+θ *= (1 - lr * wd)                      # 先衰减权重
+θ -= lr * m / √v                       # 再 Adam 更新
+```
+
+> 🤔 **Q: 为什么 LLM 用 AdamW 而不用 Adam？**
+>
+> Adam 的问题：weight decay 被加到 grad 上，会被自适应学习率缩放。
+>
+> 梯度大的参数 → adaptive lr 小 → weight decay 也被缩小，正则化不均匀。
+>
+> AdamW 把 weight decay 从 Adam 中抽出来，每个参数被一致地 decay。
 
 ---
 
@@ -168,6 +210,14 @@ $$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t \quad \text{(一阶矩)}$$
 $$v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2 \quad \text{(二阶矩)}$$
 $$\hat{m}_t = \frac{m_t}{1 - \beta_1^t}, \quad \hat{v}_t = \frac{v_t}{1 - \beta_2^t} \quad \text{(偏差修正)}$$
 $$\theta_{t+1} = \theta_t - \eta \cdot \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}$$
+
+> 🤔 **Q: 为什么除以 √v 而不是直接用 v？**
+>
+> v 是梯度平方的均值，量纲是 "梯度²"。
+>
+> 我们要除的是梯度的"幅度"，所以要开根号得到"梯度”量纲。
+>
+> 这样 m/√v 的量纲是“梯度/梯度=无量纲”，再乘 lr 才正确。
 
 ### 📝 实现代码
 
@@ -392,6 +442,15 @@ def compare_adam_adamw():
 - **Warmup**: 开始时从小学习率逐渐增大
 - **Cosine Decay**: 余弦曲线下降
 - **Linear Decay**: 线性下降
+
+> 🤔 **Q: 为什么需要 Warmup？不 warmup 会怎样？**
+>
+> 初始时参数随机，梯度方向不稳定。如果直接用大学习率：
+> 1. 参数更新幅度大，可能跳过好的局部最小值
+> 2. Adam 的 m 和 v 还没积累好，估计不稳定
+> 3. BatchNorm/LayerNorm 的统计量还不准
+>
+> Warmup 让模型先"走稳"，再"跑快"。
 
 ### 📝 实现代码
 

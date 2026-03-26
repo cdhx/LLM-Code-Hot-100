@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Interview Hot 100 - 大模型面试手撕代码</title>
+    <meta name="description" content="LLM 时代的 Hot 100，大模型面试手撕代码必备题库，社区投票驱动的真实面试热度排行">
+    <meta name="keywords" content="LLM, 大模型, 面试, 手撕代码, Attention, Transformer, RLHF, PPO, DPO, GRPO">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="LLM Interview Hot 100">
+    <meta property="og:description" content="LLM 时代的 Hot 100，大模型面试手撕代码必备">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --fire: #ef4444;
+            --bg: #f8fafc;
+            --bg-card: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(180deg, #f8fafc 0%, #e0e7ff 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 50%);
+            animation: pulse 15s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+        }
+        
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .tagline {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+        
+        .highlight {
+            color: var(--fire);
+            font-weight: 600;
+        }
+        
+        .hero-desc {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(99,102,241,0.5);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+        
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 40px;
+            margin-top: 60px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        /* Features */
+        .features {
+            padding: 100px 20px;
+            background: var(--bg);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(99,102,241,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card p {
+            color: var(--text-muted);
+        }
+        
+        /* Topics Preview */
+        .topics {
+            padding: 100px 20px;
+        }
+        
+        .topic-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        
+        .topic-table th,
+        .topic-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .topic-table th {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .topic-table tr:hover {
+            background: var(--bg-hover);
+        }
+        
+        .hot-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .hot-3 { background: rgba(239,68,68,0.2); color: #fca5a5; }
+        .hot-2 { background: rgba(251,146,60,0.2); color: #fdba74; }
+        .hot-1 { background: rgba(250,204,21,0.2); color: #fde047; }
+        
+        .category-link {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .category-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Vote CTA */
+        .vote-cta {
+            padding: 100px 20px;
+            background: linear-gradient(180deg, #e0e7ff 0%, #f8fafc 100%);
+            text-align: center;
+        }
+        
+        .vote-cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .vote-cta p {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 40px 20px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+        
+        footer p {
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            font-size: 1.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .social-links a:hover {
+            transform: scale(1.2);
+        }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .tagline { font-size: 1.2rem; }
+            .stats { gap: 20px; }
+            .stat-number { font-size: 2rem; }
+            .cta-buttons { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="logo">🔥</div>
+            <h1>LLM Interview Hot 100</h1>
+            <p class="tagline">LLM 时代的 <span class="highlight">Hot 100</span></p>
+            <p class="hero-desc">
+                大模型面试手撕代码必备题库<br>
+                社区投票驱动 · 真实面试热度 · 详细代码注释
+            </p>
+            
+            <div class="cta-buttons">
+                <a href="vote.html" class="btn btn-primary">
+                    🗳️ 参与投票
+                </a>
+                <a href="https://github.com/your-username/llm-interview-hot-100" class="btn btn-secondary">
+                    ⭐ GitHub
+                </a>
+            </div>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">63+</div>
+                    <div class="stat-label">精选题目</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">11</div>
+                    <div class="stat-label">核心模块</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="total-votes">0</div>
+                    <div class="stat-label">社区投票</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">✨ 为什么选择 Hot 100</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🗳️</div>
+                    <h3>社区投票驱动</h3>
+                    <p>热度排名来自真实面试经历，不是主观臆测。你的投票会影响排行榜！</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3>详细代码注释</h3>
+                    <p>每行代码都有清晰注释，理解原理而非死记硬背。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🆚</div>
+                    <h3>方法一览对比</h3>
+                    <p>同类方法横向对比，突出核心差异，记住一个就记住一组。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">❓</div>
+                    <h3>QA 答疑</h3>
+                    <p>预判你的困惑，在你疑惑的地方提供解答，看完豁然开朗。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔥</div>
+                    <h3>工业级实现</h3>
+                    <p>包含数值稳定性、边界处理等生产细节，不只是玩具代码。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>面试导向</h3>
+                    <p>专注 LLM 领域高频手撕题，不浪费时间在冷门内容。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Topics Preview -->
+    <section class="topics">
+        <div class="container">
+            <h2 class="section-title">🔥 热门题目预览</h2>
+            <table class="topic-table">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>题目</th>
+                        <th>分类</th>
+                        <th>热度</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>🥇</td>
+                        <td>Multi-Head Attention</td>
+                        <td><a href="docs/01-attention.md" class="category-link">Attention</a></td>
+                        <td><span class="hot-badge hot-3">🔥🔥🔥 必考</span></td>
+                    </tr>
+                    <tr>
+                        <td>🥈</td>
+                        <td>KV Cache</td>
+                        <td><a href="docs/09-inference-optimization.md" class="category-link">推理优化</a></td>
+                        <td><span class="hot-badge hot-3">🔥🔥🔥 必考</span></td>
+                    </tr>
+                    <tr>
+                        <td>🥉</td>
+                        <td>RoPE 旋转位置编码</td>
+                        <td><a href="docs/03-position-encoding.md" class="category-link">位置编码</a></td>
+                        <td><span class="hot-badge hot-3">🔥🔥🔥 必考</span></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>PPO</td>
+                        <td><a href="docs/07-reinforcement-learning.md" class="category-link">强化学习</a></td>
+                        <td><span class="hot-badge hot-3">🔥🔥🔥 必考</span></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>DPO</td>
+                        <td><a href="docs/07-reinforcement-learning.md" class="category-link">强化学习</a></td>
+                        <td><span class="hot-badge hot-3">🔥🔥🔥 必考</span></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>GRPO</td>
+                        <td><a href="docs/07-reinforcement-learning.md" class="category-link">强化学习</a></td>
+                        <td><span class="hot-badge hot-3">🔥🔥🔥 必考</span></td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Cross Entropy Loss</td>
+                        <td><a href="docs/05-loss-functions.md" class="category-link">损失函数</a></td>
+                        <td><span class="hot-badge hot-3">🔥🔥🔥 必考</span></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>LoRA</td>
+                        <td><a href="docs/08-efficient-training.md" class="category-link">高效训练</a></td>
+                        <td><span class="hot-badge hot-3">🔥🔥🔥 必考</span></td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>LayerNorm / RMSNorm</td>
+                        <td><a href="docs/02-normalization.md" class="category-link">归一化</a></td>
+                        <td><span class="hot-badge hot-3">🔥🔥🔥 必考</span></td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Adam / AdamW</td>
+                        <td><a href="docs/06-optimizers.md" class="category-link">优化器</a></td>
+                        <td><span class="hot-badge hot-3">🔥🔥🔥 必考</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="vote.html" class="btn btn-secondary">查看全部 63+ 题目 →</a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Vote CTA -->
+    <section class="vote-cta">
+        <div class="container">
+            <h2>🗳️ 你的投票很重要</h2>
+            <p>
+                热度排名来自社区真实投票。<br>
+                分享你的面试经历，帮助更多人准备！
+            </p>
+            <a href="vote.html" class="btn btn-primary">
+                立即投票 →
+            </a>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p><strong>#LLMHot100</strong> - LLM 时代的 Hot 100</p>
+            <p>Made with ❤️ for LLM Interview Preparation</p>
+            <div class="social-links">
+                <a href="https://github.com/your-username/llm-interview-hot-100" title="GitHub">⭐</a>
+                <a href="vote.html" title="投票">🗳️</a>
+            </div>
+            <p style="margin-top: 20px; font-size: 0.9rem;">
+                <a href="https://github.com/your-username/llm-interview-hot-100">GitHub</a> · 
+                <a href="https://github.com/your-username/llm-interview-hot-100/issues">反馈问题</a> · 
+                <a href="https://github.com/your-username/llm-interview-hot-100/pulls">贡献代码</a>
+            </p>
+        </div>
+    </footer>
+    
+    <script>
+        // 从 Supabase 获取投票总数（如果已配置）
+        // 这里暂时用 localStorage 的数据
+        const votes = JSON.parse(localStorage.getItem('llm-interview-votes') || '{}');
+        const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
+        document.getElementById('total-votes').textContent = totalVotes || '—';
+    </script>
+</body>
+</html>

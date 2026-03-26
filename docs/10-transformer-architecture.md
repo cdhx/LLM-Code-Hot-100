@@ -8,6 +8,7 @@
 
 ## 目录
 
+- [架构一览对比](#架构一览对比)
 - [Transformer 概览](#transformer-概览)
 - [Feed-Forward Network (FFN)](#feed-forward-network)
 - [Transformer Encoder Layer](#transformer-encoder-layer)
@@ -16,6 +17,40 @@
 - [残差连接与层归一化](#残差连接与层归一化)
 - [完整 Transformer 实现](#完整-transformer-实现)
 - [面试追问汇总](#面试追问汇总)
+
+---
+
+## 架构一览对比
+
+> 💡 **一句话区分**：不同架构的核心区别在于 **Attention 是否有掩码** 和 **是否有 Cross Attention**
+
+| 架构 | Self-Attn | Cross-Attn | Mask | 代表模型 |
+|:---|:---:|:---:|:---|:---|
+| **Encoder-Only** | ✓ | ✗ | 无 | BERT |
+| **Decoder-Only** | ✓ | ✗ | Causal | GPT, LLaMA |
+| **Encoder-Decoder** | ✓ | ✓ | Causal(Dec) | T5, BART |
+
+```python
+# 三种架构的核心区别
+
+# Encoder-Only (BERT): 看得到所有 token，适合理解
+output = SelfAttn(x, x, x, mask=None)       # 全部可见
+
+# Decoder-Only (GPT): 只能看到左边，适合生成
+output = SelfAttn(x, x, x, mask=causal)     # 只能看左边
+
+# Encoder-Decoder (T5): Encoder 全可见，Decoder 用 Encoder 输出
+enc_out = EncoderSelfAttn(x, x, x, mask=None)  # Encoder 全可见
+dec_out = DecoderSelfAttn(y, y, y, mask=causal) # Decoder 只看左边
+final = CrossAttn(dec_out, enc_out, enc_out)    # 看 Encoder
+```
+
+> 🤔 **Q: 为什么现代 LLM 都用 Decoder-Only？**
+>
+> 1. **简单**：一个统一架构，无需分 Encoder/Decoder
+> 2. **扩展性好**：只需堆堆层，没有复杂的 cross-attention
+> 3. **训练高效**：每个 position 都是一个训练样本（next token prediction）
+> 4. **推理简单**：KV Cache 实现简单，不用处理 Encoder
 
 ---
 
@@ -72,6 +107,12 @@ FFN 是 Transformer 的"记忆库"，存储知识。通常是两层 MLP：
 $$\text{FFN}(x) = \text{Act}(xW_1 + b_1)W_2 + b_2$$
 
 **维度变化**：d_model → d_ff → d_model（通常 d_ff = 4 × d_model）
+
+> 🤔 **Q: 为什么 FFN 要先升维再降维？不是浪费计算吗？**
+>
+> 升维是为了表达能力！线性变换 + 非线性激活在高维空间更容易分离特征。
+>
+> 这也是为什么研究表明 FFN 是"记忆库"——它存储了大量知识。
 
 ### 📝 实现代码
 

@@ -8,6 +8,7 @@
 
 ## 目录
 
+- [方法一览对比](#方法一览对比)
 - [Temperature Sampling](#temperature-sampling)
 - [Top-k Sampling](#top-k-sampling)
 - [Top-p (Nucleus) Sampling](#top-p-nucleus-sampling)
@@ -15,6 +16,39 @@
 - [Greedy Decoding](#greedy-decoding)
 - [组合采样策略](#组合采样策略)
 - [面试追问汇总](#面试追问汇总)
+
+---
+
+## 方法一览对比
+
+> 💡 **一句话区分**：采样策略的核心区别在于**如何过滤候选词**
+
+| 方法 | 过滤方式 | 核心代码 | 特点 |
+|:---|:---|:---|:---|
+| **Greedy** | 只保留最大 | `argmax(logits)` | 确定但易重复 |
+| **Temperature** | 缩放 logits | `softmax(logits / T)` | 控制多样性 |
+| **Top-k** | 保留前 k 个 | `topk(logits, k)` | 固定候选数 |
+| **Top-p** | 保留累积概率 ≤ p | `cumsum(probs) <= p` | 动态候选数 |
+| **Beam Search** | 保留 k 个最优序列 | 追踪多路径 | 质量高但无聊 |
+
+```python
+# 采样策略的核心区别：过滤方式不同
+
+# Greedy: 只要最大的
+token = logits.argmax()                      # 只留 1 个
+
+# Top-k: 只保留前 k 个（数量固定）
+mask = logits < topk(logits, k).values[-1]   # 只留 k 个
+
+# Top-p: 保留累积概率达到 p 的（数量动态）
+mask = cumsum(sorted_probs) > p              # 数量随分布变化
+```
+
+> 🤔 **Q: 为什么 Top-p 比 Top-k 更常用？**
+>
+> Top-k 的问题：当模型很确定时（比如下一个词 90% 是 "the"），k=50 会引入 49 个几乎不可能的词。
+>
+> Top-p 自动适应：确定时只留几个，不确定时留很多。这就是 "nucleus" （核心）的含义。
 
 ---
 
@@ -106,6 +140,12 @@ if __name__ == "__main__":
 **Q: Temperature 为什么能控制多样性？**
 
 > 除以 T 相当于放大/缩小 logits 的差异。T 小时差异放大，softmax 后高概率更高；T 大时差异缩小，分布更均匀。
+
+> 🤔 **Q: Temperature=0 和 Greedy 有什么区别？**
+>
+> 完全一样！当 T→0 时，`softmax(logits/T)` 趋近于 one-hot，采样结果就是 argmax。
+>
+> 所以代码中通常特判 `if temperature == 0: return argmax(logits)`
 
 ---
 
@@ -349,6 +389,17 @@ if __name__ == "__main__":
 ### 🎯 核心思想
 
 维护 k 个最优候选序列，每步扩展所有候选，保留得分最高的 k 个。
+
+> 🤔 **Q: Beam Search 和 Greedy 有什么区别？为什么不总是用 Beam？**
+>
+> Greedy 是 Beam width=1 的特例。Beam 可以纠正局部次优选择。
+>
+> 但 Beam Search 有问题：
+> 1. 计算量大（每步维护 k 个序列）
+> 2. 倾向于生成短句（短序列分数更高）
+> 3. 缺乏多样性（往往生成 "safe" 但无聊的句子）
+>
+> 所以现代 LLM 对话多用 Sampling，翻译等需要稳定输出时才用 Beam。
 
 ### 📝 实现代码
 

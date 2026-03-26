@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投票 - LLM Interview Hot 100</title>
+    <meta name="description" content="为 LLM 面试题目投票，帮助社区了解真实面试热度">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗳️</text></svg>">
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --fire: #ef4444;
+            --success: #22c55e;
+            --bg: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-hover: #f1f5f9;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--text);
+        }
+        
+        /* Main */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            background: var(--bg-card);
+            padding: 20px 30px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        /* Leaderboard */
+        .leaderboard {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .leaderboard h2 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .lb-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .lb-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--bg);
+            border-radius: 10px;
+            transition: transform 0.2s;
+        }
+        
+        .lb-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .lb-rank {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .lb-rank.gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #78350f; }
+        .lb-rank.silver { background: linear-gradient(135deg, #e2e8f0, #94a3b8); color: #334155; }
+        .lb-rank.bronze { background: linear-gradient(135deg, #fb923c, #ea580c); color: white; }
+        .lb-rank.normal { background: var(--border); color: var(--text-muted); }
+        
+        .lb-name {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .lb-category {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+        
+        .lb-votes {
+            font-weight: 700;
+            color: var(--fire);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Category Filter */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--text);
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        /* Topic List */
+        .category-section {
+            margin-bottom: 30px;
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+        
+        .category-header h3 {
+            font-size: 1.2rem;
+        }
+        
+        .category-header a {
+            color: var(--primary);
+            font-size: 0.9rem;
+            text-decoration: none;
+            margin-left: auto;
+        }
+        
+        .topic-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .topic-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        
+        .topic-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(99,102,241,0.1);
+        }
+        
+        .topic-number {
+            width: 30px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .topic-info {
+            flex: 1;
+        }
+        
+        .topic-name {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        
+        .topic-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .topic-votes {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .vote-count {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.95rem;
+            color: var(--fire);
+            min-width: 50px;
+            justify-content: flex-end;
+        }
+        
+        .vote-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .vote-btn.not-voted {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .vote-btn.not-voted:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+        
+        .vote-btn.voted {
+            background: var(--success);
+            color: white;
+        }
+        
+        .vote-btn.voted:hover {
+            background: #16a34a;
+        }
+        
+        .vote-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-muted);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 50px;
+        }
+        
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            .topic-item {
+                flex-wrap: wrap;
+            }
+            .topic-info {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .topic-votes {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .lb-category {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="logo-link">
+                🔥 LLM Hot 100
+            </a>
+            <nav class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="https://github.com/your-username/llm-interview-hot-100">GitHub</a>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="total-votes">—</div>
+                <div class="stat-label">总投票数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="total-topics">63</div>
+                <div class="stat-label">题目总数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="your-votes">—</div>
+                <div class="stat-label">你已投票</div>
+            </div>
+        </div>
+        
+        <!-- Leaderboard -->
+        <div class="leaderboard">
+            <h2>🏆 实时热度排行榜</h2>
+            <div class="lb-list" id="leaderboard">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    加载中...
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filter -->
+        <div class="filter-bar" id="filter-bar">
+            <button class="filter-btn active" data-category="all">全部</button>
+        </div>
+        
+        <!-- Topic List -->
+        <div id="topic-list">
+            <div class="loading">
+                <div class="spinner"></div>
+                加载题目列表...
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <!-- Footer -->
+    <footer>
+        <p><strong>#LLMHot100</strong> - LLM 时代的 LeetCode Hot 100</p>
+        <p style="margin-top: 10px;">
+            <a href="index.html">返回首页</a> · 
+            <a href="https://github.com/your-username/llm-interview-hot-100">GitHub</a>
+        </p>
+    </footer>
+    
+    <script>
+        // ========== 配置 ==========
+        // 👇 替换为你的 Supabase 配置
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        
+        // 判断是否配置了 Supabase
+        const useSupabase = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
+        
+        let supabase = null;
+        if (useSupabase) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+        
+        // ========== 题目数据 ==========
+        const topics = [
+            // 00-LLM 基础
+            { id: 'gradient', name: '梯度与反向传播', desc: '链式法则手推，深度学习根基', category: 'LLM基础', doc: 'docs/00-llm-basics.md' },
+            { id: 'linear-reg', name: '线性回归', desc: 'y = Wx + b，最简单的模型', category: 'LLM基础', doc: 'docs/00-llm-basics.md' },
+            { id: 'logistic-reg', name: '逻辑回归', desc: 'sigmoid(Wx + b)，二分类基础', category: 'LLM基础', doc: 'docs/00-llm-basics.md' },
+            { id: 'softmax-reg', name: 'Softmax 回归', desc: '多分类，LLM 输出层', category: 'LLM基础', doc: 'docs/00-llm-basics.md' },
+            { id: 'mlp', name: 'MLP 多层感知机', desc: '万能近似器，FFN 的基础', category: 'LLM基础', doc: 'docs/00-llm-basics.md' },
+            { id: 'activations', name: '激活函数', desc: 'ReLU/GELU/SiLU 及其梯度', category: 'LLM基础', doc: 'docs/00-llm-basics.md' },
+            
+            // 01-Attention
+            { id: 'sdpa', name: 'Scaled Dot-Product Attention', desc: 'softmax(QK^T/√d)V，一切的基础', category: 'Attention', doc: 'docs/01-attention.md' },
+            { id: 'mha', name: 'Multi-Head Attention', desc: '多头并行，不同子空间的注意力', category: 'Attention', doc: 'docs/01-attention.md' },
+            { id: 'causal-mask', name: 'Causal Mask', desc: '下三角掩码，防止看到未来', category: 'Attention', doc: 'docs/01-attention.md' },
+            { id: 'gqa', name: 'Grouped Query Attention', desc: 'Q头数 > KV头数，LLaMA2 主流', category: 'Attention', doc: 'docs/01-attention.md' },
+            { id: 'mqa', name: 'Multi-Query Attention', desc: '所有 Q 共享一组 KV', category: 'Attention', doc: 'docs/01-attention.md' },
+            { id: 'flash-attn', name: 'Flash Attention', desc: '分块计算，IO 感知，内存优化', category: 'Attention', doc: 'docs/01-attention.md' },
+            { id: 'kv-cache', name: 'KV Cache', desc: '缓存历史 KV，避免重复计算', category: 'Attention', doc: 'docs/01-attention.md' },
+            { id: 'cross-attn', name: 'Cross Attention', desc: 'Q 来自 decoder，KV 来自 encoder', category: 'Attention', doc: 'docs/01-attention.md' },
+            
+            // 02-归一化
+            { id: 'layernorm', name: 'Layer Normalization', desc: '沿特征维度归一化，Transformer 标配', category: '归一化', doc: 'docs/02-normalization.md' },
+            { id: 'rmsnorm', name: 'RMS Normalization', desc: '去掉均值只除 RMS，LLaMA 用', category: '归一化', doc: 'docs/02-normalization.md' },
+            { id: 'batchnorm', name: 'Batch Normalization', desc: '沿 batch 维度归一化，CNN 常用', category: '归一化', doc: 'docs/02-normalization.md' },
+            { id: 'pre-post-norm', name: 'Pre-Norm vs Post-Norm', desc: 'Pre-Norm 训练稳定，现代 LLM 主流', category: '归一化', doc: 'docs/02-normalization.md' },
+            
+            // 03-位置编码
+            { id: 'sinusoidal', name: 'Sinusoidal PE', desc: 'sin/cos 固定编码，原始 Transformer', category: '位置编码', doc: 'docs/03-position-encoding.md' },
+            { id: 'learnable-pe', name: 'Learnable PE', desc: '可学习的嵌入，BERT/GPT', category: '位置编码', doc: 'docs/03-position-encoding.md' },
+            { id: 'rope', name: 'RoPE 旋转位置编码', desc: '复数旋转，相对位置，LLM 主流', category: '位置编码', doc: 'docs/03-position-encoding.md' },
+            { id: 'alibi', name: 'ALiBi', desc: 'attention 加线性偏置，长度外推好', category: '位置编码', doc: 'docs/03-position-encoding.md' },
+            
+            // 04-采样
+            { id: 'greedy', name: 'Greedy Decoding', desc: '每步选 argmax，确定性输出', category: '采样策略', doc: 'docs/04-sampling.md' },
+            { id: 'temperature', name: 'Temperature Sampling', desc: 'logits/T 控制随机性', category: '采样策略', doc: 'docs/04-sampling.md' },
+            { id: 'topk', name: 'Top-k Sampling', desc: '只从 top-k 中采样', category: '采样策略', doc: 'docs/04-sampling.md' },
+            { id: 'topp', name: 'Top-p Sampling', desc: '累积概率达到 p 后截断', category: '采样策略', doc: 'docs/04-sampling.md' },
+            { id: 'beam', name: 'Beam Search', desc: '保留 k 个最优序列', category: '采样策略', doc: 'docs/04-sampling.md' },
+            
+            // 05-损失函数
+            { id: 'ce', name: 'Cross Entropy Loss', desc: '-log(p_true)，分类标配', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'lm-loss', name: 'Language Model Loss', desc: 'CE 的自回归版，next token prediction', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'kl', name: 'KL Divergence', desc: '分布差异度量，蒸馏/RLHF 用', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'mse', name: 'MSE Loss', desc: '(y-ŷ)²，回归任务', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'focal', name: 'Focal Loss', desc: '降低易分类样本权重', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'sft-loss', name: 'SFT Loss', desc: '带 mask 的 CE，只算 response', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'rm-loss', name: 'Reward Model Loss', desc: '-log σ(r_w - r_l)，偏好学习', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'contrastive', name: 'Contrastive Loss', desc: '正样本近，负样本远', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            
+            // 06-优化器
+            { id: 'sgd', name: 'SGD', desc: '最基础 w -= lr * grad', category: '优化器', doc: 'docs/06-optimizers.md' },
+            { id: 'momentum', name: 'SGD + Momentum', desc: '加动量，加速收敛', category: '优化器', doc: 'docs/06-optimizers.md' },
+            { id: 'adam', name: 'Adam', desc: '自适应学习率，一阶+二阶矩', category: '优化器', doc: 'docs/06-optimizers.md' },
+            { id: 'adamw', name: 'AdamW', desc: '解耦权重衰减，LLM 标配', category: '优化器', doc: 'docs/06-optimizers.md' },
+            { id: 'lr-schedule', name: '学习率调度', desc: 'Warmup + Cosine/Linear decay', category: '优化器', doc: 'docs/06-optimizers.md' },
+            
+            // 07-强化学习
+            { id: 'reinforce', name: 'REINFORCE', desc: '策略梯度基础 ∇log π × R', category: '强化学习', doc: 'docs/07-reinforcement-learning.md' },
+            { id: 'gae', name: 'GAE', desc: '优势估计，平衡偏差方差', category: '强化学习', doc: 'docs/07-reinforcement-learning.md' },
+            { id: 'ppo', name: 'PPO', desc: 'clip 限制更新幅度，RLHF 核心', category: '强化学习', doc: 'docs/07-reinforcement-learning.md' },
+            { id: 'ppo-clip', name: 'PPO-Clip', desc: 'ratio clip 版本', category: '强化学习', doc: 'docs/07-reinforcement-learning.md' },
+            { id: 'dpo', name: 'DPO', desc: '直接偏好优化，无需 RM', category: '强化学习', doc: 'docs/07-reinforcement-learning.md' },
+            { id: 'grpo', name: 'GRPO', desc: '组相对策略优化，DeepSeek 用', category: '强化学习', doc: 'docs/07-reinforcement-learning.md' },
+            { id: 'kl-penalty', name: 'KL 惩罚', desc: '防止偏离参考策略太远', category: '强化学习', doc: 'docs/07-reinforcement-learning.md' },
+            { id: 'reward-shaping', name: 'Reward Shaping', desc: '奖励工程，稀疏 → 稠密', category: '强化学习', doc: 'docs/07-reinforcement-learning.md' },
+            
+            // 08-高效训练
+            { id: 'lora', name: 'LoRA', desc: '低秩分解 W + BA', category: '高效训练', doc: 'docs/08-efficient-training.md' },
+            { id: 'qlora', name: 'QLoRA', desc: 'LoRA + 4bit 量化', category: '高效训练', doc: 'docs/08-efficient-training.md' },
+            { id: 'grad-ckpt', name: 'Gradient Checkpointing', desc: '时间换空间，重计算激活值', category: '高效训练', doc: 'docs/08-efficient-training.md' },
+            { id: 'mixed-precision', name: 'Mixed Precision', desc: '降低显存，加速计算', category: '高效训练', doc: 'docs/08-efficient-training.md' },
+            { id: 'grad-accum', name: 'Gradient Accumulation', desc: '小 batch 模拟大 batch', category: '高效训练', doc: 'docs/08-efficient-training.md' },
+            
+            // 09-推理优化
+            { id: 'kv-cache-infer', name: 'KV Cache (推理)', desc: '缓存历史 KV，加速自回归', category: '推理优化', doc: 'docs/09-inference-optimization.md' },
+            { id: 'paged-attn', name: 'Paged Attention', desc: '分页管理 KV，vLLM 核心', category: '推理优化', doc: 'docs/09-inference-optimization.md' },
+            { id: 'spec-decode', name: 'Speculative Decoding', desc: '小模型猜测 + 大模型验证', category: '推理优化', doc: 'docs/09-inference-optimization.md' },
+            { id: 'cont-batch', name: 'Continuous Batching', desc: '动态 batch，提高吞吐', category: '推理优化', doc: 'docs/09-inference-optimization.md' },
+            { id: 'quantization', name: 'Quantization', desc: '量化推理，显存减半+', category: '推理优化', doc: 'docs/09-inference-optimization.md' },
+            
+            // 10-架构
+            { id: 'encoder-only', name: 'Encoder-Only (BERT)', desc: '双向注意力，理解任务', category: 'Transformer架构', doc: 'docs/10-transformer-architecture.md' },
+            { id: 'decoder-only', name: 'Decoder-Only (GPT)', desc: '因果注意力，生成任务，LLM 主流', category: 'Transformer架构', doc: 'docs/10-transformer-architecture.md' },
+            { id: 'enc-dec', name: 'Encoder-Decoder (T5)', desc: '序列到序列，翻译/摘要', category: 'Transformer架构', doc: 'docs/10-transformer-architecture.md' },
+            { id: 'ffn', name: 'FFN', desc: '两层 MLP，中间扩展 4x', category: 'Transformer架构', doc: 'docs/10-transformer-architecture.md' },
+            { id: 'swiglu', name: 'SwiGLU', desc: '门控 FFN，LLaMA 用', category: 'Transformer架构', doc: 'docs/10-transformer-architecture.md' },
+        ];
+        
+        const categories = [...new Set(topics.map(t => t.category))];
+        
+        // ========== 状态 ==========
+        let votes = {};        // { topicId: voteCount }
+        let userVotes = [];    // 用户投过票的 topicId 列表
+        let currentFilter = 'all';
+        
+        // ========== 用户ID ==========
+        function getUserId() {
+            let id = localStorage.getItem('llm-hot-100-user-id');
+            if (!id) {
+                id = 'user_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('llm-hot-100-user-id', id);
+            }
+            return id;
+        }
+        
+        const userId = getUserId();
+        
+        // ========== 数据加载 ==========
+        async function loadVotes() {
+            // 先从 localStorage 加载，确保页面立即有数据
+            loadFromLocalStorage();
+            render();
+            
+            // 如果配置了 Supabase，尝试同步数据
+            if (useSupabase) {
+                try {
+                    // 获取所有投票计数
+                    const { data: voteCounts } = await supabase
+                        .from('votes')
+                        .select('topic_id');
+                    
+                    if (voteCounts) {
+                        votes = {};
+                        voteCounts.forEach(v => {
+                            votes[v.topic_id] = (votes[v.topic_id] || 0) + 1;
+                        });
+                    }
+                    
+                    // 获取用户投票
+                    const { data: userVoteData } = await supabase
+                        .from('votes')
+                        .select('topic_id')
+                        .eq('user_id', userId);
+                    
+                    userVotes = userVoteData ? userVoteData.map(v => v.topic_id) : [];
+                    render();
+                    
+                } catch (e) {
+                    console.error('Supabase error:', e);
+                    // 失败时保持 localStorage 数据
+                }
+            }
+        }
+        
+        function loadFromLocalStorage() {
+            votes = JSON.parse(localStorage.getItem('llm-hot-100-votes') || '{}');
+            userVotes = JSON.parse(localStorage.getItem('llm-hot-100-user-votes') || '[]');
+        }
+        
+        function saveToLocalStorage() {
+            localStorage.setItem('llm-hot-100-votes', JSON.stringify(votes));
+            localStorage.setItem('llm-hot-100-user-votes', JSON.stringify(userVotes));
+        }
+        
+        // ========== 投票 ==========
+        async function vote(topicId) {
+            const isVoted = userVotes.includes(topicId);
+            
+            if (useSupabase) {
+                try {
+                    if (isVoted) {
+                        await supabase
+                            .from('votes')
+                            .delete()
+                            .eq('user_id', userId)
+                            .eq('topic_id', topicId);
+                        
+                        userVotes = userVotes.filter(id => id !== topicId);
+                        votes[topicId] = Math.max(0, (votes[topicId] || 0) - 1);
+                    } else {
+                        await supabase
+                            .from('votes')
+                            .insert({ user_id: userId, topic_id: topicId });
+                        
+                        userVotes.push(topicId);
+                        votes[topicId] = (votes[topicId] || 0) + 1;
+                    }
+                } catch (e) {
+                    console.error('Vote error:', e);
+                    showToast('投票失败，请重试');
+                    return;
+                }
+            } else {
+                // localStorage 模式
+                if (isVoted) {
+                    userVotes = userVotes.filter(id => id !== topicId);
+                    votes[topicId] = Math.max(0, (votes[topicId] || 0) - 1);
+                } else {
+                    userVotes.push(topicId);
+                    votes[topicId] = (votes[topicId] || 0) + 1;
+                }
+                saveToLocalStorage();
+            }
+            
+            showToast(isVoted ? '已取消投票' : '投票成功！感谢参与 🎉');
+            render();
+        }
+        
+        // ========== 渲染 ==========
+        function render() {
+            renderStats();
+            renderLeaderboard();
+            renderFilters();
+            renderTopics();
+        }
+        
+        function renderStats() {
+            const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
+            document.getElementById('total-votes').textContent = totalVotes;
+            document.getElementById('total-topics').textContent = topics.length;
+            document.getElementById('your-votes').textContent = userVotes.length;
+        }
+        
+        function renderLeaderboard() {
+            const sorted = [...topics]
+                .map(t => ({ ...t, votes: votes[t.id] || 0 }))
+                .sort((a, b) => b.votes - a.votes)
+                .slice(0, 10);
+            
+            const html = sorted.map((t, i) => {
+                const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
+                const rankText = i < 3 ? ['🥇', '🥈', '🥉'][i] : (i + 1);
+                return `
+                    <div class="lb-item">
+                        <div class="lb-rank ${rankClass}">${rankText}</div>
+                        <div class="lb-name">${t.name}<span class="lb-category">${t.category}</span></div>
+                        <div class="lb-votes">🔥 ${t.votes}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('leaderboard').innerHTML = html;
+        }
+        
+        function renderFilters() {
+            const html = `
+                <button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" data-category="all">全部</button>
+                ${categories.map(cat => `
+                    <button class="filter-btn ${currentFilter === cat ? 'active' : ''}" data-category="${cat}">${cat}</button>
+                `).join('')}
+            `;
+            document.getElementById('filter-bar').innerHTML = html;
+            
+            // 绑定事件
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentFilter = btn.dataset.category;
+                    render();
+                });
+            });
+        }
+        
+        function renderTopics() {
+            const filtered = currentFilter === 'all' 
+                ? topics 
+                : topics.filter(t => t.category === currentFilter);
+            
+            // 按分类分组
+            const grouped = {};
+            filtered.forEach(t => {
+                if (!grouped[t.category]) grouped[t.category] = [];
+                grouped[t.category].push(t);
+            });
+            
+            let html = '';
+            let num = 1;
+            
+            Object.entries(grouped).forEach(([category, catTopics]) => {
+                html += `
+                    <div class="category-section">
+                        <div class="category-header">
+                            <h3>${category}</h3>
+                            <a href="${catTopics[0].doc}" target="_blank">查看文档 →</a>
+                        </div>
+                        <div class="topic-grid">
+                            ${catTopics.map(t => {
+                                const isVoted = userVotes.includes(t.id);
+                                const voteCount = votes[t.id] || 0;
+                                return `
+                                    <div class="topic-item">
+                                        <div class="topic-number">${num++}</div>
+                                        <div class="topic-info">
+                                            <div class="topic-name">${t.name}</div>
+                                            <div class="topic-desc">${t.desc}</div>
+                                        </div>
+                                        <div class="topic-votes">
+                                            <div class="vote-count">🔥 ${voteCount}</div>
+                                            <button class="vote-btn ${isVoted ? 'voted' : 'not-voted'}" onclick="vote('${t.id}')">
+                                                ${isVoted ? '✓ 已投票' : '👍 投票'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('topic-list').innerHTML = html;
+        }
+        
+        // ========== Toast ==========
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+        
+        // ========== 初始化 ==========
+        async function init() {
+            await loadVotes();
+            render();
+            
+            if (!useSupabase) {
+                showToast('📦 本地模式运行中（配置 Supabase 后可同步数据）');
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>

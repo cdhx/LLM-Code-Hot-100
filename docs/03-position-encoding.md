@@ -8,12 +8,47 @@
 
 ## 目录
 
+- [方法一览对比](#方法一览对比)
 - [Sinusoidal Position Encoding](#sinusoidal-position-encoding)
 - [Learnable Position Encoding](#learnable-position-encoding)
 - [Rotary Position Embedding (RoPE)](#rotary-position-embedding-rope)
 - [ALiBi (Attention with Linear Biases)](#alibi)
 - [位置编码对比](#位置编码对比)
 - [面试追问汇总](#面试追问汇总)
+
+---
+
+## 方法一览对比
+
+> 💡 **一句话区分**：位置编码的核心区别在于**作用方式**和**作用位置**
+
+| 方法 | 作用方式 | 作用位置 | 核心代码差异 | 使用模型 |
+|:---|:---|:---|:---|:---|
+| **Sinusoidal** | 加法 | Embedding | `x = x + pe` | Transformer |
+| **Learnable** | 加法 | Embedding | `x = x + embed(pos)` | BERT, GPT-2 |
+| **RoPE** | 乘法(旋转) | Q, K | `q = rotate(q, pos)` | LLaMA, Mistral |
+| **ALiBi** | 加法偏置 | Attention Score | `score = score + bias` | BLOOM |
+
+```python
+# 四种位置编码的核心区别
+
+# Sinusoidal/Learnable: 加到 embedding 上，影响 Q/K/V
+x = x + position_encoding
+q, k, v = W_q(x), W_k(x), W_v(x)  # 都含有位置信息
+
+# RoPE: 只旋转 Q 和 K，不影响 V
+q, k, v = W_q(x), W_k(x), W_v(x)
+q, k = apply_rope(q, pos), apply_rope(k, pos)  # 只影响 Q/K
+
+# ALiBi: 直接加到 attention score 上
+score = q @ k.T / sqrt(d) + alibi_bias[distance]  # 不修改 Q/K/V
+```
+
+> 🤔 **Q: 为什么 RoPE 只作用于 Q 和 K，不作用于 V？**
+>
+> Attention 的位置关联性由 Q·K 决定。V 只是被加权的内容，不需要位置信息。
+>
+> 而且 RoPE 的数学性质（点积只依赖相对位置）只在 Q·K 时成立，应用到 V 没有这个效果。
 
 ---
 
@@ -220,13 +255,9 @@ class RotaryPositionEmbedding(nn.Module):
         # 计算角度 [seq_len, dim/2]
         freqs = torch.einsum('i,j->ij', t, self.inv_freq)
         
-        # 扩展到完整维度 [seq_len, dim]
-        # 将 [θ0, θ1, ...] 变成 [θ0, θ0, θ1, θ1, ...]
-        emb = torch.cat((freqs, freqs), dim=-1)
-        
-        # 注册缓存
-        self.register_buffer('cos_cached', emb.cos())
-        self.register_buffer('sin_cached', emb.sin())
+        # 注册缓存 [seq_len, dim/2]
+        self.register_buffer('cos_cached', freqs.cos())
+        self.register_buffer('sin_cached', freqs.sin())
     
     def forward(
         self,
@@ -248,9 +279,9 @@ class RotaryPositionEmbedding(nn.Module):
         if seq_len is None:
             seq_len = q.size(2)
         
-        # 获取 cos/sin
-        cos = self.cos_cached[:seq_len]  # [seq_len, dim]
-        sin = self.sin_cached[:seq_len]  # [seq_len, dim]
+        # 获取 cos/sin [seq_len, dim/2]
+        cos = self.cos_cached[:seq_len]  # [seq_len, dim/2]
+        sin = self.sin_cached[:seq_len]  # [seq_len, dim/2]
         
         # 应用旋转
         q_rotated = self._apply_rotary(q, cos, sin)
@@ -270,27 +301,22 @@ class RotaryPositionEmbedding(nn.Module):
         旋转公式 (对于每对相邻维度):
         [x1, x2] @ [[cos, -sin], [sin, cos]] = [x1*cos - x2*sin, x1*sin + x2*cos]
         """
-        # 将 x 分成两半: [x1, x2, x3, x4, ...] -> [x1, x3, ...], [x2, x4, ...]
-        x1 = x[..., ::2]   # 偶数位置
-        x2 = x[..., 1::2]  # 奇数位置
+        # 将 x 分成两半: [x0, x1, x2, x3, ...] -> 前半和后半
+        # 分成 pairs: (x0, x1), (x2, x3), ... 其中 x1=x[..., :d//2], x2=x[..., d//2:]
+        d = x.shape[-1]
+        x1 = x[..., :d//2]   # 前一半 [batch, heads, seq, dim/2]
+        x2 = x[..., d//2:]   # 后一半 [batch, heads, seq, dim/2]
         
-        # 旋转
-        # cos/sin 需要调整维度以广播
-        cos = cos.unsqueeze(0).unsqueeze(0)  # [1, 1, seq, dim]
+        # 调整 cos/sin 维度以广播 [1, 1, seq, dim/2]
+        cos = cos.unsqueeze(0).unsqueeze(0)
         sin = sin.unsqueeze(0).unsqueeze(0)
         
-        cos1, cos2 = cos[..., ::2], cos[..., 1::2]
-        sin1, sin2 = sin[..., ::2], sin[..., 1::2]
-        
         # 应用旋转矩阵
-        rotated_x1 = x1 * cos1 - x2 * sin1
-        rotated_x2 = x1 * sin2 + x2 * cos2
+        rotated_x1 = x1 * cos - x2 * sin
+        rotated_x2 = x1 * sin + x2 * cos
         
-        # 交织回去
-        rotated = torch.stack([rotated_x1, rotated_x2], dim=-1)
-        rotated = rotated.flatten(-2)
-        
-        return rotated
+        # 拼接回去 [batch, heads, seq, dim]
+        return torch.cat([rotated_x1, rotated_x2], dim=-1)
 
 
 class RoPESimple(nn.Module):
@@ -358,6 +384,14 @@ if __name__ == "__main__":
 
 ### 🔍 RoPE 的数学原理
 
+> 🤔 **Q: 为什么用旋转而不是加法编码位置？**
+>
+> 旋转的妙处在于：旋转矩阵的乘法等于角度相加！
+>
+> $R_m^T \cdot R_n = R_{n-m}$
+>
+> 所以 $q_m \cdot k_n = (R_m q)^T (R_n k) = q^T R_{n-m} k$，只依赖相对位置！
+
 ```
 假设二维情况（一对相邻维度）：
 原始: q = [q1, q2], k = [k1, k2]
@@ -390,6 +424,13 @@ q_m · k_n = (R_m @ q)^T @ (R_n @ k)
 
 > 每个 head 独立处理位置信息，让不同 head 可以学习不同的位置关系模式。
 
+> 🤔 **Q: 为什么用 `einsum('i,j->ij', t, inv_freq)` 而不是直接乘？**
+>
+> `einsum('i,j->ij', t, inv_freq)` 等价于 `torch.outer(t, inv_freq)`，
+> 是计算外积：`t[i] * inv_freq[j]` 得到 `[seq_len, dim/2]`。
+>
+> 直接乘法 `t * inv_freq` 要求维度相同，而这里维度不同。
+
 ---
 
 ## ALiBi
@@ -401,6 +442,14 @@ ALiBi (Attention with Linear Biases) 完全不修改 Q/K，而是直接在 atten
 $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}} + \mathbf{m} \cdot \text{dist}\right)V$$
 
 其中 `dist[i,j] = -|i-j|`（距离越远，偏置越负）
+
+> 🤔 **Q: ALiBi 的斜率 m 是怎么设计的？为什么不同 head 斜率不同？**
+>
+> 斜率 $m = 2^{-8/n}, 2^{-8 \cdot 2/n}, ...$，呈指数递减。
+>
+> 斜率大的 head 更关注局部（远距离惩罚大），斜率小的 head 能看到更远的信息。
+>
+> 这让不同 head “分工”关注不同范围。
 
 ### 📝 实现代码
 
