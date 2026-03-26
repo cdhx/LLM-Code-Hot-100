@@ -474,7 +474,7 @@
     
     <!-- Footer -->
     <footer>
-        <p><strong>#LLMHot100</strong> - LLM 时代的 LeetCode Hot 100</p>
+        <p><strong>#LLMHot100</strong> - LLM 时代的 Hot 100</p>
         <p style="margin-top: 10px;">
             <a href="index.html">返回首页</a> · 
             <a href="https://github.com/cdhx/LLM-Code-Hot-100">GitHub</a>
@@ -490,9 +490,9 @@
         // 判断是否配置了 Supabase
         const useSupabase = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
         
-        let supabase = null;
+        let supabaseClient = null;
         if (useSupabase) {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
         
         // ========== 题目数据 ==========
@@ -612,7 +612,7 @@
             if (useSupabase) {
                 try {
                     // 获取所有投票计数
-                    const { data: voteCounts } = await supabase
+                    const { data: voteCounts } = await supabaseClient
                         .from('votes')
                         .select('topic_id');
                     
@@ -624,7 +624,7 @@
                     }
                     
                     // 获取用户投票
-                    const { data: userVoteData } = await supabase
+                    const { data: userVoteData } = await supabaseClient
                         .from('votes')
                         .select('topic_id')
                         .eq('user_id', userId);
@@ -656,7 +656,7 @@
             if (useSupabase) {
                 try {
                     if (isVoted) {
-                        await supabase
+                        await supabaseClient
                             .from('votes')
                             .delete()
                             .eq('user_id', userId)
@@ -665,7 +665,7 @@
                         userVotes = userVotes.filter(id => id !== topicId);
                         votes[topicId] = Math.max(0, (votes[topicId] || 0) - 1);
                     } else {
-                        await supabase
+                        await supabaseClient
                             .from('votes')
                             .insert({ user_id: userId, topic_id: topicId });
                         
