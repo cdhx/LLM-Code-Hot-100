@@ -6,10 +6,10 @@
 
 **大模型面试手撕代码 · 社区投票驱动 · 每日更新排行**
 
-[![GitHub stars](https://img.shields.io/github/stars/your-username/llm-interview-hot-100?style=social)](https://github.com/your-username/llm-interview-hot-100)
+[![GitHub stars](https://img.shields.io/github/stars/cdhx/LLM-Code-Hot-100?style=social)](https://github.com/cdhx/LLM-Code-Hot-100)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
-[![Vote](https://img.shields.io/badge/🗳️-参与投票-ff6b6b)](https://your-username.github.io/llm-interview-hot-100)
+[![Vote](https://img.shields.io/badge/🗳️-参与投票-ff6b6b)](https://cdhx.github.io/LLM-Code-Hot-100)
 
 <p align="center">
   <strong>📖 背完这 100 题，大模型面试手撕不再慌</strong>
@@ -23,7 +23,7 @@
 
 **"KV Cache 怎么实现？Flash Attention 的核心思想是什么？"**
 
-**👉 [在线投票：哪道题最常被考？](https://your-username.github.io/llm-interview-hot-100) 👈**
+**👉 [在线投票：哪道题最常被考？](https://cdhx.github.io/LLM-Code-Hot-100) 👈**
 
 </div>
 
@@ -45,7 +45,7 @@
 
 > **图例：** 🔥🔥🔥 必考 ｜ 🔥🔥 高频 ｜ 🔥 偶尔 ｜ 无标记 了解即可
 >
-> **👉 [参与投票](https://your-username.github.io/llm-interview-hot-100)**，用你的面试经历帮助社区校准 Hot 程度！
+> **👉 [参与投票](https://cdhx.github.io/LLM-Code-Hot-100)**，用你的面试经历帮助社区校准 Hot 程度！
 
 ### 📖 LLM 基础 → [查看](docs/00-llm-basics.md)
 
@@ -227,7 +227,7 @@
 
 **你的面试经历很重要！** 帮助社区校准题目的真实热度。
 
-**👉 [前往投票页面](https://your-username.github.io/llm-interview-hot-100) 👈**
+**👉 [前往投票页面](https://cdhx.github.io/LLM-Code-Hot-100) 👈**
 
 - 🗳️ 投票给你面试中遇到过的题目
 - 🏆 实时排行榜，社区真实数据
@@ -279,7 +279,7 @@
 
 如果这个项目对你有帮助，请给一个 Star ⭐ 支持一下！
 
-[![Star History Chart](https://api.star-history.com/svg?repos=your-username/llm-interview-hot-100&type=Date)](https://star-history.com/#your-username/llm-interview-hot-100&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=cdhx/LLM-Code-Hot-100&type=Date)](https://star-history.com/#cdhx/LLM-Code-Hot-100&Date)
 
 ---
 
@@ -291,6 +291,6 @@
 
 **#LLMHot100**
 
-[Report Bug](https://github.com/your-username/llm-interview-hot-100/issues) · [Request Feature](https://github.com/your-username/llm-interview-hot-100/issues) · [参与投票](https://your-username.github.io/llm-interview-hot-100)
+[Report Bug](https://github.com/cdhx/LLM-Code-Hot-100/issues) · [Request Feature](https://github.com/cdhx/LLM-Code-Hot-100/issues) · [参与投票](https://cdhx.github.io/LLM-Code-Hot-100)
 
 </div>

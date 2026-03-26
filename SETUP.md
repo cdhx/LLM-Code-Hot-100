@@ -112,7 +112,7 @@ git push origin main
 
 等待 1-2 分钟后，访问：
 ```
-https://your-username.github.io/llm-interview-hot-100/
+https://cdhx.github.io/LLM-Code-Hot-100/
 ```
 
 ---
@@ -122,7 +122,7 @@ https://your-username.github.io/llm-interview-hot-100/
 如果你有自己的域名（如 `llm-hot-100.com`）：
 
 1. 在仓库根目录创建 `CNAME` 文件，内容为你的域名
-2. 在域名 DNS 设置中添加 CNAME 记录指向 `your-username.github.io`
+2. 在域名 DNS 设置中添加 CNAME 记录指向 `cdhx.github.io`
 3. 在 GitHub Pages 设置中填入自定义域名
 
 ---
