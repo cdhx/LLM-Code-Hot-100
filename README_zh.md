@@ -169,32 +169,32 @@
 
 ## 🔥 高频 Top 20
 
-> 由社区投票实时产生，每小时 自动更新
+> 由社区投票驱动，每小时自动更新
 >
-> **最后更新**: 2025-03-26 (初始排名，等待社区投票)
+> **最后更新**: 2026-03-27
 
 | 排名 | 题目 | 分类 | 票数 |
 |:---:|:---|:---|:---:|
-| 🥇 | Multi-Head Attention | Attention | 🔥 — |
-| 🥈 | KV Cache | 推理优化 | 🔥 — |
-| 🥉 | RoPE 位置编码 | 位置编码 | 🔥 — |
-| 4 | [PPO](docs/07-reinforcement-learning.md#ppo) | 强化学习 | 🔥 — |
-| 5 | [DPO](docs/07-reinforcement-learning.md#dpo) | 强化学习 | 🔥 — |
-| 6 | [GRPO](docs/07-reinforcement-learning.md#grpo) | 强化学习 | 🔥 — |
-| 7 | [Cross Entropy Loss](docs/05-loss-functions.md#cross-entropy-loss) | 损失函数 | 🔥 — |
-| 8 | [LayerNorm / RMSNorm](docs/02-normalization.md#layer-normalization) | 归一化 | 🔥 — |
-| 9 | [Adam / AdamW](docs/06-optimizers.md#adam) | 优化器 | 🔥 — |
-| 10 | [Top-p Sampling](docs/04-sampling.md#top-p-nucleus-sampling) | 采样策略 | 🔥 — |
-| 11 | [LoRA](docs/08-efficient-training.md#lora) | 高效训练 | 🔥 — |
-| 12 | [GQA / MQA](docs/01-attention.md#grouped-query-attention-gqa) | Attention | 🔥 — |
-| 13 | [Causal Mask](docs/01-attention.md#causal-mask) | Attention | 🔥 — |
-| 14 | [GAE](docs/07-reinforcement-learning.md#gae) | 强化学习 | 🔥 — |
-| 15 | [Beam Search](docs/04-sampling.md#beam-search) | 采样策略 | 🔥 — |
-| 16 | [Flash Attention](docs/01-attention.md#flash-attention-原理) | Attention | 🔥 — |
-| 17 | [Decoder-Only 架构](docs/10-transformer-architecture.md#gpt-style-decoder-only) | 架构 | 🔥 — |
-| 18 | [Gradient Checkpointing](docs/08-efficient-training.md#gradient-checkpointing) | 高效训练 | 🔥 — |
-| 19 | [Speculative Decoding](docs/09-inference-optimization.md#speculative-decoding) | 推理优化 | 🔥 — |
-| 20 | [SwiGLU](docs/10-transformer-architecture.md#feed-forward-network) | 架构 | 🔥 — |
+| 🥇 | [梯度与反向传播](docs/00-llm-basics.md#梯度与反向传播) | Basics | 🔥 3 |
+| 🥈 | [线性回归](docs/00-llm-basics.md#线性回归) | Basics | 🔥 3 |
+| 🥉 | [Scaled Dot-Product Attention](docs/01-attention.md#scaled-dot-product-attention) | Attention | 🔥 3 |
+| 4 | [逻辑回归](docs/00-llm-basics.md#逻辑回归) | Basics | 🔥 2 |
+| 5 | batchnorm | Other | 🔥 2 |
+| 6 | ce | Other | 🔥 2 |
+| 7 | [Layer Normalization](docs/02-normalization.md#layer-normalization) | Norm | 🔥 2 |
+| 8 | [Multi-Head Attention](docs/01-attention.md#multi-head-attention) | Attention | 🔥 2 |
+| 9 | [Grouped Query Attention](docs/01-attention.md#grouped-query-attention-gqa) | Attention | 🔥 1 |
+| 10 | [RoPE 旋转位置编码](docs/03-position-encoding.md#rotary-position-embedding-rope) | Position | 🔥 1 |
+| 11 | [DPO](docs/07-reinforcement-learning.md#dpo) | RL | 🔥 1 |
+| 12 | [Causal Mask](docs/01-attention.md#causal-mask) | Attention | 🔥 1 |
+| 13 | [Top-k Sampling](docs/04-sampling.md#top-k-sampling) | Sampling | 🔥 1 |
+| 14 | [Top-p Sampling](docs/04-sampling.md#top-p-nucleus-sampling) | Sampling | 🔥 1 |
+| 15 | [Beam Search](docs/04-sampling.md#beam-search) | Sampling | 🔥 1 |
+| 16 | [Decoder-Only (GPT)](docs/10-transformer-architecture.md#gpt-style-decoder-only) | Arch | 🔥 1 |
+| 17 | [FFN](docs/10-transformer-architecture.md#feed-forward-network) | Arch | 🔥 1 |
+| 18 | [GAE](docs/07-reinforcement-learning.md#gae) | RL | 🔥 1 |
+| 19 | [GRPO](docs/07-reinforcement-learning.md#grpo) | RL | 🔥 1 |
+| 20 | kl-penalty | Other | 🔥 1 |
 
 ---
 
