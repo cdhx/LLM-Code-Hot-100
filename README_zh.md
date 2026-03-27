@@ -179,8 +179,8 @@
 | 🥈 | [线性回归](docs/00-llm-basics.md#线性回归) | Basics | 🔥 3 |
 | 🥉 | [Scaled Dot-Product Attention](docs/01-attention.md#scaled-dot-product-attention) | Attention | 🔥 3 |
 | 4 | [逻辑回归](docs/00-llm-basics.md#逻辑回归) | Basics | 🔥 2 |
-| 5 | batchnorm | Other | 🔥 2 |
-| 6 | ce | Other | 🔥 2 |
+| 5 | [Batch Normalization](docs/02-normalization.md#batch-normalization) | Norm | 🔥 2 |
+| 6 | [Cross Entropy Loss](docs/05-loss-functions.md#cross-entropy-loss) | Loss | 🔥 2 |
 | 7 | [Layer Normalization](docs/02-normalization.md#layer-normalization) | Norm | 🔥 2 |
 | 8 | [Multi-Head Attention](docs/01-attention.md#multi-head-attention) | Attention | 🔥 2 |
 | 9 | [Grouped Query Attention](docs/01-attention.md#grouped-query-attention-gqa) | Attention | 🔥 1 |
@@ -194,7 +194,7 @@
 | 17 | [FFN](docs/10-transformer-architecture.md#feed-forward-network) | Arch | 🔥 1 |
 | 18 | [GAE](docs/07-reinforcement-learning.md#gae) | RL | 🔥 1 |
 | 19 | [GRPO](docs/07-reinforcement-learning.md#grpo) | RL | 🔥 1 |
-| 20 | kl-penalty | Other | 🔥 1 |
+| 20 | [KL 惩罚](docs/07-reinforcement-learning.md#ppo) | RL | 🔥 1 |
 
 ---
 
