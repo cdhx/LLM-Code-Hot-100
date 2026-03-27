@@ -175,14 +175,14 @@
 
 | 排名 | 题目 | 分类 | 票数 |
 |:---:|:---|:---|:---:|
-| 🥇 | [梯度与反向传播](docs/00-llm-basics.md#梯度与反向传播) | Basics | 🔥 3 |
-| 🥈 | [线性回归](docs/00-llm-basics.md#线性回归) | Basics | 🔥 3 |
-| 🥉 | [Scaled Dot-Product Attention](docs/01-attention.md#scaled-dot-product-attention) | Attention | 🔥 3 |
-| 4 | [逻辑回归](docs/00-llm-basics.md#逻辑回归) | Basics | 🔥 2 |
-| 5 | [Batch Normalization](docs/02-normalization.md#batch-normalization) | Norm | 🔥 2 |
-| 6 | [Cross Entropy Loss](docs/05-loss-functions.md#cross-entropy-loss) | Loss | 🔥 2 |
-| 7 | [Layer Normalization](docs/02-normalization.md#layer-normalization) | Norm | 🔥 2 |
-| 8 | [Multi-Head Attention](docs/01-attention.md#multi-head-attention) | Attention | 🔥 2 |
+| 🥇 | [Scaled Dot-Product Attention](docs/01-attention.md#scaled-dot-product-attention) | Attention | 🔥 4 |
+| 🥈 | [梯度与反向传播](docs/00-llm-basics.md#梯度与反向传播) | Basics | 🔥 3 |
+| 🥉 | [线性回归](docs/00-llm-basics.md#线性回归) | Basics | 🔥 3 |
+| 4 | [Multi-Head Attention](docs/01-attention.md#multi-head-attention) | Attention | 🔥 3 |
+| 5 | [逻辑回归](docs/00-llm-basics.md#逻辑回归) | Basics | 🔥 2 |
+| 6 | [Batch Normalization](docs/02-normalization.md#batch-normalization) | Norm | 🔥 2 |
+| 7 | [Cross Entropy Loss](docs/05-loss-functions.md#cross-entropy-loss) | Loss | 🔥 2 |
+| 8 | [Layer Normalization](docs/02-normalization.md#layer-normalization) | Norm | 🔥 2 |
 | 9 | [Grouped Query Attention](docs/01-attention.md#grouped-query-attention-gqa) | Attention | 🔥 1 |
 | 10 | [RoPE 旋转位置编码](docs/03-position-encoding.md#rotary-position-embedding-rope) | Position | 🔥 1 |
 | 11 | [DPO](docs/07-reinforcement-learning.md#dpo) | RL | 🔥 1 |

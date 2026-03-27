@@ -177,14 +177,14 @@
 
 | Rank | Topic | Category | Votes |
 |:---:|:---|:---|:---:|
-| 🥇 | [Gradient & Backprop](docs/00-llm-basics.md#梯度与反向传播) | Basics | 🔥 3 |
-| 🥈 | [Linear Regression](docs/00-llm-basics.md#线性回归) | Basics | 🔥 3 |
-| 🥉 | [Scaled Dot-Product Attention](docs/01-attention.md#scaled-dot-product-attention) | Attention | 🔥 3 |
-| 4 | [Logistic Regression](docs/00-llm-basics.md#逻辑回归) | Basics | 🔥 2 |
-| 5 | [BatchNorm](docs/02-normalization.md#batch-normalization) | Norm | 🔥 2 |
-| 6 | [Cross Entropy](docs/05-loss-functions.md#cross-entropy-loss) | Loss | 🔥 2 |
-| 7 | [LayerNorm](docs/02-normalization.md#layer-normalization) | Norm | 🔥 2 |
-| 8 | [Multi-Head Attention](docs/01-attention.md#multi-head-attention) | Attention | 🔥 2 |
+| 🥇 | [Scaled Dot-Product Attention](docs/01-attention.md#scaled-dot-product-attention) | Attention | 🔥 4 |
+| 🥈 | [Gradient & Backprop](docs/00-llm-basics.md#梯度与反向传播) | Basics | 🔥 3 |
+| 🥉 | [Linear Regression](docs/00-llm-basics.md#线性回归) | Basics | 🔥 3 |
+| 4 | [Multi-Head Attention](docs/01-attention.md#multi-head-attention) | Attention | 🔥 3 |
+| 5 | [Logistic Regression](docs/00-llm-basics.md#逻辑回归) | Basics | 🔥 2 |
+| 6 | [BatchNorm](docs/02-normalization.md#batch-normalization) | Norm | 🔥 2 |
+| 7 | [Cross Entropy](docs/05-loss-functions.md#cross-entropy-loss) | Loss | 🔥 2 |
+| 8 | [LayerNorm](docs/02-normalization.md#layer-normalization) | Norm | 🔥 2 |
 | 9 | [GQA](docs/01-attention.md#grouped-query-attention-gqa) | Attention | 🔥 1 |
 | 10 | [RoPE](docs/03-position-encoding.md#rotary-position-embedding-rope) | Position | 🔥 1 |
 | 11 | [DPO](docs/07-reinforcement-learning.md#dpo) | RL | 🔥 1 |
