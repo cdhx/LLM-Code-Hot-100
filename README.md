@@ -56,7 +56,7 @@
 | 1 | [Gradient & Backprop](docs/00-llm-basics.md#梯度与反向传播) | 🔥🔥 | ⭐⭐ | Chain rule, foundation of deep learning |
 | 2 | [Linear Regression](docs/00-llm-basics.md#线性回归) | 🔥 | ⭐ | `y = Wx + b`, simplest model |
 | 3 | [Logistic Regression](docs/00-llm-basics.md#逻辑回归) | 🔥🔥 | ⭐⭐ | `sigmoid(Wx + b)`, binary classification |
-| 4 | Softmax Regression | 🔥 | ⭐⭐ | Multi-class, LLM output layer |
+| 4 | [Softmax Regression](docs/00-llm-basics.md#回归-vs-分类) | 🔥 | ⭐⭐ | Multi-class, LLM output layer |
 | 5 | [MLP](docs/00-llm-basics.md#mlp-多层感知机) | 🔥🔥 | ⭐⭐ | Universal approximator, FFN basis |
 | 6 | [Activation Functions](docs/00-llm-basics.md#激活函数) | 🔥🔥 | ⭐ | ReLU/GELU/SiLU and gradients |
 

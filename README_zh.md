@@ -54,7 +54,7 @@
 | 1 | [梯度与反向传播](docs/00-llm-basics.md#梯度与反向传播) | 🔥🔥 | ⭐⭐ | 链式法则手推，深度学习根基 |
 | 2 | [线性回归](docs/00-llm-basics.md#线性回归) | 🔥 | ⭐ | `y = Wx + b`，最简单的模型 |
 | 3 | [逻辑回归](docs/00-llm-basics.md#逻辑回归) | 🔥🔥 | ⭐⭐ | `sigmoid(Wx + b)`，二分类基础 |
-| 4 | Softmax 回归 | 🔥 | ⭐⭐ | 多分类，LLM 输出层 |
+| 4 | [Softmax 回归](docs/00-llm-basics.md#回归-vs-分类) | 🔥 | ⭐⭐ | 多分类，LLM 输出层 |
 | 5 | [MLP 多层感知机](docs/00-llm-basics.md#mlp-多层感知机) | 🔥🔥 | ⭐⭐ | 万能近似器，FFN 的基础 |
 | 6 | [激活函数](docs/00-llm-basics.md#激活函数) | 🔥🔥 | ⭐ | ReLU/GELU/SiLU 及其梯度 |
 
