@@ -6,6 +6,9 @@ on:
       - 'docs/*.md'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   generate-pdfs:
     runs-on: ubuntu-latest
