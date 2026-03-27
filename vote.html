@@ -512,14 +512,14 @@
             { id: 'gqa', name: 'Grouped Query Attention', desc: 'Q头数 > KV头数，LLaMA2 主流', category: 'Attention', doc: 'docs/01-attention.md' },
             { id: 'mqa', name: 'Multi-Query Attention', desc: '所有 Q 共享一组 KV', category: 'Attention', doc: 'docs/01-attention.md' },
             { id: 'flash-attn', name: 'Flash Attention', desc: '分块计算，IO 感知，内存优化', category: 'Attention', doc: 'docs/01-attention.md' },
-            { id: 'kv-cache', name: 'KV Cache', desc: '缓存历史 KV，避免重复计算', category: 'Attention', doc: 'docs/01-attention.md' },
+            { id: 'kv-cache-attn', name: 'KV Cache', desc: '缓存历史 KV，避免重复计算', category: 'Attention', doc: 'docs/01-attention.md' },
             { id: 'cross-attn', name: 'Cross Attention', desc: 'Q 来自 decoder，KV 来自 encoder', category: 'Attention', doc: 'docs/01-attention.md' },
             
             // 02-归一化
             { id: 'layernorm', name: 'Layer Normalization', desc: '沿特征维度归一化，Transformer 标配', category: '归一化', doc: 'docs/02-normalization.md' },
             { id: 'rmsnorm', name: 'RMS Normalization', desc: '去掉均值只除 RMS，LLaMA 用', category: '归一化', doc: 'docs/02-normalization.md' },
             { id: 'batchnorm', name: 'Batch Normalization', desc: '沿 batch 维度归一化，CNN 常用', category: '归一化', doc: 'docs/02-normalization.md' },
-            { id: 'pre-post-norm', name: 'Pre-Norm vs Post-Norm', desc: 'Pre-Norm 训练稳定，现代 LLM 主流', category: '归一化', doc: 'docs/02-normalization.md' },
+            { id: 'prenorm', name: 'Pre-Norm vs Post-Norm', desc: 'Pre-Norm 训练稳定，现代 LLM 主流', category: '归一化', doc: 'docs/02-normalization.md' },
             
             // 03-位置编码
             { id: 'sinusoidal', name: 'Sinusoidal PE', desc: 'sin/cos 固定编码，原始 Transformer', category: '位置编码', doc: 'docs/03-position-encoding.md' },
@@ -535,11 +535,11 @@
             { id: 'beam', name: 'Beam Search', desc: '保留 k 个最优序列', category: '采样策略', doc: 'docs/04-sampling.md' },
             
             // 05-损失函数
-            { id: 'ce', name: 'Cross Entropy Loss', desc: '-log(p_true)，分类标配', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'ce-loss', name: 'Cross Entropy Loss', desc: '-log(p_true)，分类标配', category: '损失函数', doc: 'docs/05-loss-functions.md' },
             { id: 'lm-loss', name: 'Language Model Loss', desc: 'CE 的自回归版，next token prediction', category: '损失函数', doc: 'docs/05-loss-functions.md' },
-            { id: 'kl', name: 'KL Divergence', desc: '分布差异度量，蒸馏/RLHF 用', category: '损失函数', doc: 'docs/05-loss-functions.md' },
-            { id: 'mse', name: 'MSE Loss', desc: '(y-ŷ)²，回归任务', category: '损失函数', doc: 'docs/05-loss-functions.md' },
-            { id: 'focal', name: 'Focal Loss', desc: '降低易分类样本权重', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'kl-div', name: 'KL Divergence', desc: '分布差异度量，蒸馏/RLHF 用', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'mse-loss', name: 'MSE Loss', desc: '(y-ŷ)²，回归任务', category: '损失函数', doc: 'docs/05-loss-functions.md' },
+            { id: 'focal-loss', name: 'Focal Loss', desc: '降低易分类样本权重', category: '损失函数', doc: 'docs/05-loss-functions.md' },
             { id: 'sft-loss', name: 'SFT Loss', desc: '带 mask 的 CE，只算 response', category: '损失函数', doc: 'docs/05-loss-functions.md' },
             { id: 'rm-loss', name: 'Reward Model Loss', desc: '-log σ(r_w - r_l)，偏好学习', category: '损失函数', doc: 'docs/05-loss-functions.md' },
             { id: 'contrastive', name: 'Contrastive Loss', desc: '正样本近，负样本远', category: '损失函数', doc: 'docs/05-loss-functions.md' },
@@ -569,7 +569,7 @@
             { id: 'grad-accum', name: 'Gradient Accumulation', desc: '小 batch 模拟大 batch', category: '高效训练', doc: 'docs/08-efficient-training.md' },
             
             // 09-推理优化
-            { id: 'kv-cache-infer', name: 'KV Cache (推理)', desc: '缓存历史 KV，加速自回归', category: '推理优化', doc: 'docs/09-inference-optimization.md' },
+            { id: 'kv-cache', name: 'KV Cache (推理)', desc: '缓存历史 KV，加速自回归', category: '推理优化', doc: 'docs/09-inference-optimization.md' },
             { id: 'paged-attn', name: 'Paged Attention', desc: '分页管理 KV，vLLM 核心', category: '推理优化', doc: 'docs/09-inference-optimization.md' },
             { id: 'spec-decode', name: 'Speculative Decoding', desc: '小模型猜测 + 大模型验证', category: '推理优化', doc: 'docs/09-inference-optimization.md' },
             { id: 'cont-batch', name: 'Continuous Batching', desc: '动态 batch，提高吞吐', category: '推理优化', doc: 'docs/09-inference-optimization.md' },

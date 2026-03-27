@@ -60,7 +60,7 @@
 | 5 | [MLP](docs/00-llm-basics.md#mlp-多层感知机) | 🔥🔥 | ⭐⭐ | Universal approximator, FFN basis |
 | 6 | [Activation Functions](docs/00-llm-basics.md#激活函数) | 🔥🔥 | ⭐ | ReLU/GELU/SiLU and gradients |
 
-### �� Attention Mechanisms → [View](docs/01-attention.md) · [PDF](pdfs/01-attention.pdf)
+### 🧠 Attention Mechanisms → [View](docs/01-attention.md) · [PDF](pdfs/01-attention.pdf)
 
 | # | Topic | Hot | Difficulty | One-liner |
 |:---:|:---|:---:|:---:|:---|
