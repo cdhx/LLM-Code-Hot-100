@@ -740,17 +740,7 @@ def explain_flash_attention_io():
 
 **Q: Online Softmax 是什么？**
 
-> 对同一个 query，逐块遍历 K、V，维护已处理分数的最大值 `M`、平移后的指数和 `L` 以及归一化输出 `O`。不同 query 各自维护独立的状态。
-
-对一个 query，设旧状态为 $(m, \ell, o)$，新块分数为 $s_t$，则更新为：
-
-$$m' = \max(m, \max_{t \in B} s_t), \qquad \alpha = e^{m-m'}, \qquad p_t = e^{s_t-m'}$$
-
-$$\ell' = \alpha\ell + \sum_{t \in B}p_t, \qquad o' = \frac{\alpha\ell o + \sum_{t \in B}p_t v_t}{\ell'}$$
-
-其中 `exp_old` 对应 $\alpha$，`exp_new` 对应 $p_t$。旧输出已归一化，因此先乘回旧分母 `L`，再用 `exp_old` 调整指数基准，最后与新块的加权分子合并。代码必须先计算新 `O`，再覆盖旧 `L`。
-
-注意：`L` 保存的是 $\ell = \sum e^{s_t-m}$，不是 logsumexp；后者为 $m + \log \ell$。
+> 增量计算 softmax：维护 running max 和 running sum，每处理一个块就更新，无需等到看完所有数据。
 
 ---
 
