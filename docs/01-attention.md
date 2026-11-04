@@ -646,9 +646,6 @@ Flash Attention 通过**分块计算 + Online Softmax**，避免存储完整的 
 下面是单头、无 mask 的 PyTorch 教学实现，假设 Q、K、V 均为 `[N, d]`，且 device、dtype 一致。它演示分块与 Online Softmax 的计算过程；真正的 Flash Attention 通过融合 kernel 将块内中间结果保留在片上，这里的普通 PyTorch 操作不保证这一点。
 
 ```python
-import torch
-
-
 def flash_attention_forward_naive(Q, K, V, block_size=64):
     """
     Flash Attention 前向传播（简化版伪代码）
