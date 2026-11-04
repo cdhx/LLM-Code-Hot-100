@@ -643,7 +643,12 @@ Flash Attention 通过**分块计算 + Online Softmax**，避免存储完整的 
 
 ### 📝 伪代码实现
 
+下面是单头、无 mask 的 PyTorch 教学实现，假设 Q、K、V 均为 `[N, d]`，且 device、dtype 一致。它演示分块与 Online Softmax 的计算过程；真正的 Flash Attention 通过融合 kernel 将块内中间结果保留在片上，这里的普通 PyTorch 操作不保证这一点。
+
 ```python
+import torch
+
+
 def flash_attention_forward_naive(Q, K, V, block_size=64):
     """
     Flash Attention 前向传播（简化版伪代码）
@@ -653,14 +658,15 @@ def flash_attention_forward_naive(Q, K, V, block_size=64):
     2. 使用 Online Softmax 在块间增量更新
     
     标准 Attention 内存：O(N²) - 存储完整 attention 矩阵
-    Flash Attention 内存：O(N) - 只存储输出和中间统计量
+    不保留自动求导图时，本示例前向内存：O(Nd + block_size²)
+    固定 d 和 block_size 时，随 N 线性增长
     """
     N, d = Q.shape
     
     # 输出和统计量初始化
     O = torch.zeros_like(Q)           # 输出
-    L = torch.zeros(N, 1)             # logsumexp (softmax 分母的 log)
-    M = torch.full((N, 1), float('-inf'))  # running max (数值稳定性)
+    L = torch.zeros(N, 1, device=Q.device, dtype=Q.dtype)  # 平移后的指数和
+    M = torch.full((N, 1), float('-inf'), device=Q.device, dtype=Q.dtype)  # running max
     
     # 分块遍历 K, V
     for j in range(0, N, block_size):
@@ -673,10 +679,10 @@ def flash_attention_forward_naive(Q, K, V, block_size=64):
             i_end = min(i + block_size, N)
             Qi = Q[i:i_end]  # 当前 Q 块
             
-            # === 在 SRAM 中计算（不写回 HBM）===
+            # 融合 kernel 中，这些块内计算可在片上完成；此处用 PyTorch 演示
             
             # 1. 计算局部 attention scores
-            Sij = Qi @ Kj.T  # [block_size, block_size]
+            Sij = (Qi @ Kj.T) / (d ** 0.5)  # [当前 Q 块长度, 当前 K 块长度]
             
             # 2. Online Softmax 更新
             # 找到新的 max
@@ -687,7 +693,7 @@ def flash_attention_forward_naive(Q, K, V, block_size=64):
             exp_old = torch.exp(M[i:i_end] - M_new)  # 旧结果的缩放
             exp_new = torch.exp(Sij - M_new)         # 新块的 exp
             
-            # 更新 logsumexp
+            # 更新平移后的指数和（softmax 分母）
             L_new = exp_old * L[i:i_end] + exp_new.sum(dim=-1, keepdim=True)
             
             # 3. 更新输出（增量更新）
@@ -737,7 +743,17 @@ def explain_flash_attention_io():
 
 **Q: Online Softmax 是什么？**
 
-> 增量计算 softmax：维护 running max 和 running sum，每处理一个块就更新，无需等到看完所有数据。
+> 对同一个 query，逐块遍历 K、V，维护已处理分数的最大值 `M`、平移后的指数和 `L` 以及归一化输出 `O`。不同 query 各自维护独立的状态。
+
+对一个 query，设旧状态为 $(m, \ell, o)$，新块分数为 $s_t$，则更新为：
+
+$$m' = \max(m, \max_{t \in B} s_t), \qquad \alpha = e^{m-m'}, \qquad p_t = e^{s_t-m'}$$
+
+$$\ell' = \alpha\ell + \sum_{t \in B}p_t, \qquad o' = \frac{\alpha\ell o + \sum_{t \in B}p_t v_t}{\ell'}$$
+
+其中 `exp_old` 对应 $\alpha$，`exp_new` 对应 $p_t$。旧输出已归一化，因此先乘回旧分母 `L`，再用 `exp_old` 调整指数基准，最后与新块的加权分子合并。代码必须先计算新 `O`，再覆盖旧 `L`。
+
+注意：`L` 保存的是 $\ell = \sum e^{s_t-m}$，不是 logsumexp；后者为 $m + \log \ell$。
 
 ---
 
